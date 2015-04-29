@@ -29,9 +29,11 @@ public:
 	void shear(glm::vec3 shear_vector);
 	void setRotateCenter(glm::vec3 _center){rotate_center = glm::vec3(_center);}
 private:
+	glm::mat4 rotate_matrix;
 	bool visible;
 	bool perspective;
 	std::vector<float> projected_vertices;
+	std::vector<float> vertex_color;
 	glm::vec3 rotate_center;
 };
 

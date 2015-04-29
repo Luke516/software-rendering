@@ -31,7 +31,7 @@ public:
 	void cameraRotate(int parallel,int vertical );//not complete
 	void keyActive(int key);
 
-	void DrawTriangle(std::vector<float> &pixel_position, int mode);
+	void DrawTriangle(std::vector<float> &pixel_position, std::vector<float> & color, int mode);
 	void DrawLine(std::vector<float> &pixel_position, int mode);
 	void DrawPixel(int x, int y, float t, int color_r=0, int color_g=0, int color_b=0);
 
@@ -50,10 +50,9 @@ public:
 
 	char *getPixelData(){return screen_pixel_data;}
 
-	void pushLight(Light l){light_list.push_back(l);}
-	std::vector<Light>& getLightList(){return light_list;}
-	void setRenderLightList(std::vector<Light> &list){light_list = list;}
-	std::vector<Light>& getRenderLightList(){return light_list;}
+	std::vector<Light>* getLightList(){return light_list;}
+	void setRenderLightList(std::vector<Light> *list){light_list = list;}
+	std::vector<Light>* getRenderLightList(){return light_list;}
 private:
 	bool view_changed;
 	MyWindow* window;
@@ -65,7 +64,7 @@ private:
 	glm::vec3 camera_lookat_position;
 	glm::vec3 camera_up;
 	std::vector<BasicObject*>render_list;
-	std::vector <Light> &light_list;
+	std::vector <Light> *light_list;
 	std::vector<unsigned int>shader_program_list;
 	glm::mat4 projection_matrix;
 	glm::mat4 view_matrix;

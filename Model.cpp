@@ -14,10 +14,11 @@
 #include "glmmm.h"
 #include "Model.h"
 #include "Label.h"
+#include "Light.h"
 #include "GlobalLoaders.h"
 
 
-Model::Model(float _x, float _y, float _z, std::string file_name):rotate_center(0.0)
+Model::Model(float _x, float _y, float _z, std::string file_name):rotate_center(0.0),rotate_matrix(1.0)
 {
 	visible = true;
 	perspective = true;
@@ -31,6 +32,17 @@ Model::Model(float _x, float _y, float _z, std::string file_name):rotate_center(
 	ObjLoader::LoadObjFromFileVertexAndNormal(file_name.c_str(), &obj_vertex, &obj_normal, &aabb_bottom_left, &aabb_top_right);
 
 	projected_vertices = std::vector<float>(obj_vertex);
+	vertex_color.clear();
+	int rgb[3];
+	for(unsigned int i=0; i<=obj_vertex.size(); i+=9){
+
+		rgb[0] = (i*7)%120;
+		rgb[1] = (i*11)%120;
+		rgb[2] = (i*17)%120;
+		vertex_color.push_back(rgb[0]);
+		vertex_color.push_back(rgb[1]);
+		vertex_color.push_back(rgb[2]);
+	}
 
 	glGenBuffers(1, &vbo_projected_vertex);
 	/*glGenBuffers(1, &vbo_vertex);
@@ -84,23 +96,50 @@ void Model::render(Renderer* renderer, bool view_changed){
 	projected_vertices.clear();
 	//std::vector<float> filled_projected_vertices;
 
+	std::vector<Light> *light_list = renderer->getLightList();
+	std::vector<float> lighted_color(vertex_color);
+	int rgb[3];
+	glm::vec4 normal_cameraspace;
+	glm::vec3 normal,light_dir,light_pos;
+
+	float alpha, power;
+	printf("obj_vertex.size() = %d\n",obj_vertex.size());
+	printf("obj_normal.size() = %d\n",obj_normal.size());
 
 	for(unsigned int i=0; i<obj_vertex.size(); i+=3){
 		_x = obj_vertex[i];
 		_y = obj_vertex[i+1];
 		_z = obj_vertex[i+2];
 
+
+		if(i%9==0){
+			normal_cameraspace = (rotate_matrix * glm::vec4(obj_normal[i], obj_normal[i+1], obj_normal[i+2], 1.0));
+			printf("normal = %f,%f,%f\n",obj_normal[i], obj_normal[i+1], obj_normal[i+2]);
+			normal = glm::vec3(normal_cameraspace.x, normal_cameraspace.y, normal_cameraspace.z);
+			//normal = glm::normalize(normal);
+			for(unsigned int l=0 ;l<light_list->size(); l++){
+				//if((*light_list)[l].getType() == 0);
+				printf("normal = %f,%f,%f\n",normal.x,normal.y,normal.z);
+				light_dir = glm::normalize((*light_list)[l].getPosition());
+				//printf("light_dir = %f,%f,%f\n",light_dir.x,light_dir.y,light_dir.z);
+				alpha = glm::dot(-light_dir, normal);
+				alpha = glm::clamp(alpha, 0.0f, 1.0f);
+				power = (*light_list)[l].getPower() * alpha;
+				printf("alpha=%f  power=%f\n",alpha,power);
+				lighted_color[i/3]*=(power+0.1);
+				lighted_color[i/3+1]*=(power+0.1);
+				lighted_color[i/3+2]*=(power+0.1);
+			}
+		}
 		modelspace_position = renderer->getViewMatrix() * model_matrix * glm::vec4(_x, _y, _z, 1.0);
 
 		int window_height = renderer->getWindow()->getWindowHeight();
 		int window_width = renderer->getWindow()->getWindowWidth();
-		//printf("window_height: %d  window_width: %d\n",window_height,window_width);
+
 		GLfloat z_near = renderer->getZnear();
 		GLfloat rad = renderer->getFovy() / 180 * 3.1415926;
 
-		//glm::vec3 camera_up = glm::vec3(0,1,0);//renderer->getCameraUp();
-		glm::vec3 camera_position = glm::vec3(0,0,0);//renderer->getCameraPosition();
-		//glm::vec3 camera_look_at_posiotion = glm::vec3(0,0,1);//renderer->getCameraLookAtPosition();
+		glm::vec3 camera_position = glm::vec3(0,0,0);
 
 		if(modelspace_position.z < z_near){
 			clip = true;
@@ -124,8 +163,8 @@ void Model::render(Renderer* renderer, bool view_changed){
 
 		GLfloat h_length = tan(rad / 2) * z_near;
 		GLfloat w_length = h_length * window_width / window_height;
-		glm::vec3 w = glm::vec3(w_length,0,0);//glm::cross(view, camera_up);
-		glm::vec3 h = glm::vec3(0,h_length,0);//glm::cross(view, w);
+		glm::vec3 w = glm::vec3(w_length,0,0);
+		glm::vec3 h = glm::vec3(0,h_length,0);
 
 		glm::vec3 view = glm::vec3(0,0,-z_near);//camera_look_at_posiotion - camera_position;
 
@@ -146,7 +185,7 @@ void Model::render(Renderer* renderer, bool view_changed){
 	}
 
 	std::vector<float> v(projected_vertices);
-	renderer -> DrawTriangle(v, mode);
+	renderer -> DrawTriangle(v, lighted_color, mode);
 
 }
 
@@ -210,7 +249,7 @@ void Model::renderOtho(Renderer* renderer){
 	}
 
 	std::vector<float> v(projected_vertices);
-	renderer -> DrawTriangle(v, mode);
+	renderer -> DrawTriangle(v, vertex_color, mode);
 }
 
 void Model::setMode(int next_mode){
@@ -238,22 +277,23 @@ void Model::translate(glm::vec3 translate_vector){
 }
 
 void Model::rotate(float angle, glm::vec3 axis, glm::vec3 offset){
-	glm::mat4 rotate_matrix(1.0);
+	glm::mat4 rotate_m(1.0);
 	float u = axis.x;
 	float v = axis.y;
 	float w = axis.z;
 	angle = angle/360*2*3.14159;
-	rotate_matrix[0].x = glm::cos(angle) + (u * u) * (1 - glm::cos(angle));
-	rotate_matrix[1].x = u * v * (1 - glm::cos(angle)) + w * glm::sin(angle);
-	rotate_matrix[2].x = u * w * (1 - glm::cos(angle)) - v * glm::sin(angle);
-	rotate_matrix[0].y = u * v * (1 - glm::cos(angle)) - w * glm::sin(angle);
-	rotate_matrix[1].y = glm::cos(angle) + v * v * (1 - glm::cos(angle));
-	rotate_matrix[2].y = w * v * (1 - glm::cos(angle)) + u * glm::sin(angle);
-	rotate_matrix[0].z = u * w * (1 - glm::cos(angle)) + v * glm::sin(angle);
-	rotate_matrix[1].z = v * w * (1 - glm::cos(angle)) - u * glm::sin(angle);
-	rotate_matrix[2].z = glm::cos(angle) + w * w * (1 - glm::cos(angle));
+	rotate_m[0].x = glm::cos(angle) + (u * u) * (1 - glm::cos(angle));
+	rotate_m[1].x = u * v * (1 - glm::cos(angle)) + w * glm::sin(angle);
+	rotate_m[2].x = u * w * (1 - glm::cos(angle)) - v * glm::sin(angle);
+	rotate_m[0].y = u * v * (1 - glm::cos(angle)) - w * glm::sin(angle);
+	rotate_m[1].y = glm::cos(angle) + v * v * (1 - glm::cos(angle));
+	rotate_m[2].y = w * v * (1 - glm::cos(angle)) + u * glm::sin(angle);
+	rotate_m[0].z = u * w * (1 - glm::cos(angle)) + v * glm::sin(angle);
+	rotate_m[1].z = v * w * (1 - glm::cos(angle)) - u * glm::sin(angle);
+	rotate_m[2].z = glm::cos(angle) + w * w * (1 - glm::cos(angle));
 	translate(rotate_center);
-	model_matrix =  model_matrix * rotate_matrix;
+	model_matrix =  model_matrix * rotate_m;
+	rotate_matrix = rotate_matrix * rotate_m;
 	translate(-rotate_center);
 	//model_matrix = glm::rotate(model_matrix, angle, axis);
 }

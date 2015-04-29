@@ -194,7 +194,7 @@ bool ObjLoader::LoadObjFromFileVertexAndNormal(const char* path,std::vector<floa
 	float vertex[3], normal[3];
 	float xmin=10000,xmax=-10000,ymin=10000,ymax=-10000,zmin=10000,zmax=-10000;
 	unsigned int f=0,i,count=0;
-	unsigned int temp_v, temp_n;
+	unsigned int temp_v, temp_n, temp_uv;
 
 	FILE* objfile = fopen(path, "r");
 	if (objfile == NULL) {
@@ -246,7 +246,7 @@ bool ObjLoader::LoadObjFromFileVertexAndNormal(const char* path,std::vector<floa
 			count = 0;
 			for(i=0; i<strlen(line); i++){
 				if(i==0 || line[i]==' '){
-					sscanf(line+i,"%u /%u",&temp_v, &temp_n);
+					sscanf(line+i,"%u/%u/%u",&temp_v, &temp_uv, &temp_n);
 					index.push_back(temp_v);
 					index.push_back(temp_n);
 					count++;

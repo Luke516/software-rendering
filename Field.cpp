@@ -65,7 +65,7 @@ Field::Field():command(50,640,"")
 
 	Label::setTarget(model);
 
-	Light light(0.5, 0.5, 0.5, 1.0, 0.0, 0.0, 50.0, 10.0);
+	Light light(0.5, 0.5, 0.5, 1.0, 0.0, 0.0, -10.0, 1.0);
 	light_list.push_back(light);
 }
 
@@ -75,7 +75,7 @@ Field::~Field(){
 
 void Field::render(Renderer *renderer, bool view_changed){
 
-	renderer->setRenderLightList(light_list);
+	renderer->setRenderLightList(&light_list);
 
 	for(unsigned int i=0; i<model_list.size(); i++){
 		//printf("i = %u\n",i);
