@@ -23,4 +23,10 @@ namespace glmmm {
 		//return glm::translate(matrix, translate_vector);
 	}
 
+	float interpolationf(float a, float b, float p){
+		float ans;
+		if(p>1)return a;
+		ans = a*p + b*(1-p);
+		return ans;
+	}
 } /* namespace glmmm */

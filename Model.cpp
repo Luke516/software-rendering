@@ -120,7 +120,6 @@ void Model::render(Renderer* renderer, bool view_changed){
 
 		dir = glm::vec3(modelspace_position.x, modelspace_position.y, modelspace_position.z);
 		depth = glm::length(dir);
-		//dir = glm::vec3(_x, _y, _z) - camera_position;
 		dir = glm::normalize(dir);
 
 		GLfloat h_length = tan(rad / 2) * z_near;
@@ -132,11 +131,6 @@ void Model::render(Renderer* renderer, bool view_changed){
 
 		glm::vec3 middle_point_of_screen = camera_position + view;
 
-		/*t =  (view.x * dir.x + view.y * dir.y + view.z * dir.z);
-		//printf("t = %f\n",t);
-		t = ((middle_point_of_screen.x - camera_position.x) * view.x
-					+(middle_point_of_screen.y - camera_position.y) * view.y
-					+(middle_point_of_screen.z - camera_position.z) * view.z) / t;*/
 
 		t = -z_near/glm::abs(dir.z);
 
@@ -145,71 +139,14 @@ void Model::render(Renderer* renderer, bool view_changed){
 		GLfloat h_offset = glm::dot((projected_position - middle_point_of_screen), h) / glm::dot(h, h);
 		GLfloat w_offset = glm::dot((projected_position - middle_point_of_screen), w) / glm::dot(w, w);
 
-		//projected_vertices.push_back((w_offset+1)*window_width/2);
-		//projected_vertices.push_back((h_offset+1)*window_height/2);   //why negative QWQ?
-		//projected_vertices.push_back(depth);
+		projected_vertices.push_back((w_offset+1)*window_width/2);
+		projected_vertices.push_back((h_offset+1)*window_height/2);   //why negative QWQ?
+		projected_vertices.push_back(1/modelspace_position.z);
 
-		//printf("x=%f, y=%f, z=%f, depth=%f\n",modelspace_position.x, modelspace_position.y, modelspace_position.z, depth*100);
-		//projected_vertices.push_back(0.1);
-
-
-		//for(int k=0; k<50000; k++)
-			//data[k] = 250;
-
-		/*if((i+3)%9 == 0){ //last vertex of a triangle
-			pixel_x = ( projected_vertices[i] - projected_vertices[i-6] ) * window_width;
-			pixel_y = ( projected_vertices[i+1] - projected_vertices[i-5] ) * window_height;
-			pixel_dis = glm::sqrt(pixel_x*pixel_x + pixel_y*pixel_y);
-			for(float f=0.0; f<=pixel_dis; f+=3.0){
-				filled_projected_vertices.push_back(projected_vertices[i-6] + (pixel_x/window_width)*f/pixel_dis);
-				filled_projected_vertices.push_back(projected_vertices[i-5] + (pixel_y/window_height)*f/pixel_dis);
-				filled_projected_vertices.push_back(0.1);
-			}
-		}
-		if((i+3)%9 == 0 || (i+6)%9 == 0){
-			pixel_x = ( projected_vertices[i] - projected_vertices[i-3] ) * window_width;
-			pixel_y = ( projected_vertices[i+1] - projected_vertices[i-2] ) * window_height;
-			pixel_dis = glm::sqrt(pixel_x*pixel_x + pixel_y*pixel_y);
-			for(float f=0.0; f<=pixel_dis; f+=3.0){
-				filled_projected_vertices.push_back(projected_vertices[i-3] + (pixel_x/window_width)*f/pixel_dis);
-				filled_projected_vertices.push_back(projected_vertices[i-2] + (pixel_y/window_height)*f/pixel_dis);
-				filled_projected_vertices.push_back(0.1);
-			}
-		}*/
-
-		//printf("%f, %f, %f\n",projected_vertices[i] ,projected_vertices[i+1], projected_vertices[i+2]);
-
-		/*
-		projected_vertices.push_back(projected_position.x);
-		projected_vertices.push_back(projected_position.y);
-		projected_vertices.push_back(projected_position.z);
-		 */
 	}
 
 	std::vector<float> v(projected_vertices);
 	renderer -> DrawTriangle(v, mode);
-	//projected_vertices = std::vector<float>(filled_projected_vertices);
-
-
-	//renderer->useProgram(0);
-
-	//glBindBuffer(GL_ARRAY_BUFFER, vbo_projected_vertex);
-	//glBufferData(GL_ARRAY_BUFFER, projected_vertices.size() * sizeof(float),&projected_vertices[0], GL_DYNAMIC_DRAW);
-
-	//for(int j=0; j<1000000; j++){}
-
-	/*glEnableVertexAttribArray(0);
-	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, NULL);
-	glBindBuffer(GL_ARRAY_BUFFER, vbo_normal);
-	glEnableVertexAttribArray(1);
-	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 0, NULL);
-	glBindBuffer(GL_ARRAY_BUFFER, vbo_uv);
-	glEnableVertexAttribArray(2);
-	glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 0, NULL);*/
-	//glBindTexture(GL_TEXTURE_2D,texture_id);
-	//printf("mode :%d\n",mode);
-	//renderer->setUniform(model_matrix ,mode);
-	//glDrawArrays(GL_POINTS, 0, projected_vertices.size()/3);
 
 }
 
@@ -269,40 +206,7 @@ void Model::renderOtho(Renderer* renderer){
 		projected_vertices.push_back((w_offset+1)*window_width/2);
 		projected_vertices.push_back((h_offset+1)*window_height/2);   //why negative QWQ?
 		projected_vertices.push_back(t);
-		//projected_vertices.push_back(0.1);
 
-
-		//for(int k=0; k<50000; k++)
-			//data[k] = 250;
-
-		/*if((i+3)%9 == 0){ //last vertex of a triangle
-			pixel_x = ( projected_vertices[i] - projected_vertices[i-6] ) * window_width;
-			pixel_y = ( projected_vertices[i+1] - projected_vertices[i-5] ) * window_height;
-			pixel_dis = glm::sqrt(pixel_x*pixel_x + pixel_y*pixel_y);
-			for(float f=0.0; f<=pixel_dis; f+=3.0){
-				filled_projected_vertices.push_back(projected_vertices[i-6] + (pixel_x/window_width)*f/pixel_dis);
-				filled_projected_vertices.push_back(projected_vertices[i-5] + (pixel_y/window_height)*f/pixel_dis);
-				filled_projected_vertices.push_back(0.1);
-			}
-		}
-		if((i+3)%9 == 0 || (i+6)%9 == 0){
-			pixel_x = ( projected_vertices[i] - projected_vertices[i-3] ) * window_width;
-			pixel_y = ( projected_vertices[i+1] - projected_vertices[i-2] ) * window_height;
-			pixel_dis = glm::sqrt(pixel_x*pixel_x + pixel_y*pixel_y);
-			for(float f=0.0; f<=pixel_dis; f+=3.0){
-				filled_projected_vertices.push_back(projected_vertices[i-3] + (pixel_x/window_width)*f/pixel_dis);
-				filled_projected_vertices.push_back(projected_vertices[i-2] + (pixel_y/window_height)*f/pixel_dis);
-				filled_projected_vertices.push_back(0.1);
-			}
-		}*/
-
-		//printf("%f, %f, %f\n",projected_vertices[i] ,projected_vertices[i+1], projected_vertices[i+2]);
-
-		/*
-		projected_vertices.push_back(projected_position.x);
-		projected_vertices.push_back(projected_position.y);
-		projected_vertices.push_back(projected_position.z);
-		 */
 	}
 
 	std::vector<float> v(projected_vertices);

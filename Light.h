@@ -18,6 +18,8 @@ public:
 	glm::vec3& getPosition(){return position;}
 	float getPower(unsigned int index){return power;}
 protected:
+	unsigned int type;// 0:parallel light, 1:spot light
+	bool on;
 	glm::vec4 rgba;
 	glm::vec3 position;
 	float power;

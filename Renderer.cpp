@@ -275,12 +275,12 @@ void Renderer::DrawTriangle(std::vector<float> &pixel_position, int mode){
 	//return;
 	int w,h,target_w,target_h,pre_w,pre_h,w_offset,h_offset,count,color=0;
 	int rgb[3];
-	float slope,t;
+	float slope,t,target_z,pre_z;
 	//printf("pixel_position.size = %d\n",pixel_position.size());
 	for(unsigned int i=0; i<pixel_position.size(); i+=3){
 
 		if(i%9==0){
-			t = (pixel_position[i+2] + pixel_position[i+5] + pixel_position[i+8])/3;
+			//t = 3/(pixel_position[i+2] + pixel_position[i+5] + pixel_position[i+8]);
 			//color = (color+1)%3;
 			//memset(rgb, 0, sizeof(int)*3);
 			//rgb[color] = 100 + mode*40;
@@ -309,6 +309,7 @@ void Renderer::DrawTriangle(std::vector<float> &pixel_position, int mode){
 				std::iter_swap(pixel_position.begin() + i+3, pixel_position.begin() + i+6);
 				std::iter_swap(pixel_position.begin() + i+5, pixel_position.begin() + i+8);
 			}
+			//printf("y1:%f  y2:%f  y3:%f\n",pixel_position[i+1],pixel_position[i+4],pixel_position[i+7]);
 		}
 		//fillTriangle(pixel_position,i);
 		//return;
@@ -316,12 +317,14 @@ void Renderer::DrawTriangle(std::vector<float> &pixel_position, int mode){
 
 		target_w = (int)pixel_position[i];
 		target_h = (int)pixel_position[i+1];
+		target_z = pixel_position[i+2];
 
 		//screen_pixel_data[(h*window_width + w)*3] =pixel_color;
 
 		if(i%9!=0){
 			pre_w = (int)pixel_position[i-3];
 			pre_h = (int)pixel_position[i-2];
+			pre_z = pixel_position[i-1];
 
 			w_offset = target_w - pre_w;
 			h_offset = target_h - pre_h;
@@ -334,7 +337,9 @@ void Renderer::DrawTriangle(std::vector<float> &pixel_position, int mode){
 				for(int j=0; j!=w_offset+count; j+=count){
 					h = (int)(pre_h + slope*j);
 					w = pre_w+j;
-					//t = pixel_position[i-1] + (pixel_position[i+2] - pixel_position[i-1])/(w_offset)*j ;
+					t = pre_z + ((target_z- pre_z)/(w_offset))*j ;
+					//printf("pre_z:%f target_z:%f z=%f\n",pre_z,target_z,t);
+					//t = 1/t;
 					if(i%9==3){
 						if(h>=0 && h<1500){
 							triangle_bound[h][0] = w;
@@ -350,7 +355,7 @@ void Renderer::DrawTriangle(std::vector<float> &pixel_position, int mode){
 					if(h >= window_height || h<0 || w<0 || w>=window_width)continue;
 					//printf("h=%d  w=%d\n",h,w);
 					//screen_pixel_data[(h*window_width + w)*3+color] = 100 + mode*40;
-					DrawPixel(w, h, t, rgb[0], rgb[1], rgb[2]);
+					DrawPixel(w, h, 1/t, rgb[0], rgb[1], rgb[2]);
 				}
 			}
 			else{
@@ -358,7 +363,8 @@ void Renderer::DrawTriangle(std::vector<float> &pixel_position, int mode){
 				for(int j=0; j!=h_offset+count; j+=count){
 					h = (int)(pre_h + j);
 					w = (int)(pre_w+j/slope);
-					//t = pixel_position[i-1] + (pixel_position[i+2] - pixel_position[i-1])/(h_offset)*j ;
+					t = pre_z + ((target_z- pre_z)/(h_offset))*j ;
+					//t = 1/t;
 					if(i%9==3){
 						if(h>=0 && h<1500){
 							triangle_bound[h][0] = w;
@@ -374,7 +380,7 @@ void Renderer::DrawTriangle(std::vector<float> &pixel_position, int mode){
 					if(h >= window_height || h<0 || w<0 || w>=window_width)continue;
 					//printf("h=%d  w=%d\n",h,w);
 					//screen_pixel_data[(h*window_width + w)*3+color] = 100 + mode*40;
-					DrawPixel(w, h, t, rgb[0], rgb[1], rgb[2]);
+					DrawPixel(w, h, 1/t, rgb[0], rgb[1], rgb[2]);
 				}
 			}
 		}
@@ -382,6 +388,7 @@ void Renderer::DrawTriangle(std::vector<float> &pixel_position, int mode){
 		if(i%9==6){
 			pre_w = (int)pixel_position[i-6];
 			pre_h = (int)pixel_position[i-5];
+			pre_z = pixel_position[i-4];
 
 			w_offset = target_w - pre_w;
 			h_offset = target_h - pre_h;
@@ -394,7 +401,7 @@ void Renderer::DrawTriangle(std::vector<float> &pixel_position, int mode){
 				for(int j=0; j!=w_offset+count; j+=count){
 					h = (int)(pre_h + slope*j);
 					w = pre_w+j;
-					//t = pixel_position[i-4] + (pixel_position[i+2] - pixel_position[i-4])/(w_offset)*j ;
+					t = pre_z + ((target_z- pre_z)/(w_offset))*j ;
 					if(h>=0 && h<1500){
 						triangle_bound[h][1] = w;
 						bound_depth[h][1] = t;
@@ -402,7 +409,7 @@ void Renderer::DrawTriangle(std::vector<float> &pixel_position, int mode){
 					if(h >= window_height || h<0 || w<0 || w>=window_width)continue;
 					//printf("h=%d  w=%d\n",h,w);
 					//screen_pixel_data[(h * window_width + w) * 3 + color] =100 + mode * 40;
-					DrawPixel(w, h, t, rgb[0], rgb[1], rgb[2]);
+					DrawPixel(w, h, 1/t, rgb[0], rgb[1], rgb[2]);
 				}
 			}
 			else{
@@ -410,7 +417,8 @@ void Renderer::DrawTriangle(std::vector<float> &pixel_position, int mode){
 				for(int j=0; j!=h_offset+count; j+=count){
 					h = (int)(pre_h + j);
 					w = (int)(pre_w+j/slope);
-					//t = pixel_position[i-4] + (pixel_position[i+2] - pixel_position[i-4])/(h_offset)*j ;
+					t = pre_z + ((target_z- pre_z)/(h_offset))*j ;
+					//t = 1/t;
 					if(h>=0 && h<1500){
 						triangle_bound[h][1] = w;
 						bound_depth[h][1] = t;
@@ -418,7 +426,7 @@ void Renderer::DrawTriangle(std::vector<float> &pixel_position, int mode){
 					if(h >= window_height || h<0 || w<0 || w>=window_width)continue;
 					//printf("h=%d  w=%d\n",h,w);
 					//screen_pixel_data[(h*window_width + w)*3+color] = 100 + mode*40;
-					DrawPixel(w, h, t, rgb[0], rgb[1], rgb[2]);
+					DrawPixel(w, h, 1/t, rgb[0], rgb[1], rgb[2]);
 				}
 			}
 			//continue;
@@ -432,10 +440,11 @@ void Renderer::DrawTriangle(std::vector<float> &pixel_position, int mode){
 				w_offset = triangle_bound[j][1] - triangle_bound[j][0];
 				for(int k = triangle_bound[j][0]; k<triangle_bound[j][1]; k++ ){
 					if(j >= window_height || j<0 || k<0 || k>=window_width)continue;
-					if(w_offset != 0.0)t = bound_depth[j][0] + (bound_depth[j][1] - bound_depth[j][0])/w_offset*k;
+					if(w_offset != 0.0)t = bound_depth[j][0] + (bound_depth[j][1] - bound_depth[j][0])/w_offset*(k-triangle_bound[j][0]);
 					else t=bound_depth[j][0];
+					//printf("pre_z:%f target_z:%f z=%f\n",bound_depth[j][0],bound_depth[j][1],t);
 					//screen_pixel_data[(j*window_width + k)*3+color] = 100 + mode*40;
-					DrawPixel(k, j, t, rgb[0], rgb[1], rgb[2]);
+					DrawPixel(k, j, 1/t, rgb[0], rgb[1], rgb[2]);
 				}
 			}
 		}

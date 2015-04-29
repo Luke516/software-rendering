@@ -52,6 +52,8 @@ public:
 
 	void pushLight(Light l){light_list.push_back(l);}
 	std::vector<Light>& getLightList(){return light_list;}
+	void setRenderLightList(std::vector<Light> &list){light_list = list;}
+	std::vector<Light>& getRenderLightList(){return light_list;}
 private:
 	bool view_changed;
 	MyWindow* window;
@@ -63,7 +65,7 @@ private:
 	glm::vec3 camera_lookat_position;
 	glm::vec3 camera_up;
 	std::vector<BasicObject*>render_list;
-	std::vector <Light> light_list;
+	std::vector <Light> &light_list;
 	std::vector<unsigned int>shader_program_list;
 	glm::mat4 projection_matrix;
 	glm::mat4 view_matrix;

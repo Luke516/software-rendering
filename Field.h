@@ -10,6 +10,7 @@
 #include <vector>
 #include "Model.h"
 #include "Label.h"
+#include "Light.h"
 #include "CommandLine.h"
 #include "Renderer.h"
 #include "BasicObject.h"
@@ -32,6 +33,7 @@ private:
 	std::vector<Model *> model_list;
 	std::vector<Label *> label_list;
 	std::vector<SelectableObject *> selectable_list;
+	std::vector<Light> light_list;
 	std::vector<unsigned int> touched_list;
 	std::vector<unsigned int> selected_list;
 	CommandLine command;
